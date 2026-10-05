@@ -1,14 +1,20 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
-export const handler = async () => {
+export const handler = async (event: any) => {
   try {
+    // Cognito user ID, set by the API Gateway authorizer after validating the token
+    const ownerId = event.requestContext.authorizer.claims.sub;
+
     const response = await docClient.send(
-      new ScanCommand({
+      new QueryCommand({
         TableName: process.env.TABLE_NAME!,
+        IndexName: "ownerId-index",
+        KeyConditionExpression: "ownerId = :ownerId",
+        ExpressionAttributeValues: { ":ownerId": ownerId },
       })
     );
 

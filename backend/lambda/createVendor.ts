@@ -8,9 +8,12 @@ const docClient = DynamoDBDocumentClient.from(client);
 export const handler = async (event: any) => {
   try {
     const body = JSON.parse(event.body);
+    // Cognito user ID, set by the API Gateway authorizer after validating the token
+    const ownerId = event.requestContext.authorizer.claims.sub;
 
     const item = {
       vendorId: randomUUID(), // Generates a collision-safe unique ID
+      ownerId,
       name: body.name,
       category: body.category,
       contactEmail: body.contactEmail,

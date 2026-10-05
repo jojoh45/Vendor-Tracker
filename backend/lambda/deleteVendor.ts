@@ -17,12 +17,28 @@ export const handler = async (event: any) => {
       };
     }
 
-    await docClient.send(
-      new DeleteCommand({
-        TableName: process.env.TABLE_NAME!,
-        Key: { vendorId },
-      })
-    );
+    const ownerId = event.requestContext.authorizer.claims.sub;
+
+    try {
+      await docClient.send(
+        new DeleteCommand({
+          TableName: process.env.TABLE_NAME!,
+          Key: { vendorId },
+          // Only delete if the vendor belongs to the caller
+          ConditionExpression: "ownerId = :ownerId",
+          ExpressionAttributeValues: { ":ownerId": ownerId },
+        })
+      );
+    } catch (error: any) {
+      if (error.name === "ConditionalCheckFailedException") {
+        return {
+          statusCode: 404,
+          headers: { "Access-Control-Allow-Origin": "*" },
+          body: JSON.stringify({ error: "Vendor not found" }),
+        };
+      }
+      throw error;
+    }
 
     return {
       statusCode: 200,

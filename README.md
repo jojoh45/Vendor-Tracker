@@ -361,7 +361,7 @@ This deletes **everything**, including the DynamoDB table and **all vendor data*
 
 ## Cost
 
-At hobby or demo usage this should cost roughly **$0/month**. Everything is serverless and pay-per-use, and most of it falls within the AWS Free Tier:
+At hobby or demo usage, this should cost roughly **$0/month**. Everything is serverless and pay-per-use, and most of it falls within the AWS Free Tier:
 
 - DynamoDB on-demand: pay per read/write; storage for a few vendors is negligible
 - Lambda and API Gateway: pay per request
@@ -386,16 +386,3 @@ Check current pricing and set an [AWS Budget](https://docs.aws.amazon.com/cost-m
 | Verification email never arrives | Check spam. Cognito's default sender has a low daily limit. |
 
 ---
-
-## Known limitations and ideas for improvement
-
-The project is intentionally minimal. If you build on it, consider:
-
-- **Input validation:** `createVendor` doesn't check that fields are present or valid, and malformed JSON returns `500` instead of `400`.
-- **No pagination:** `getVendors` returns a single `Query` page (up to 1 MB of data per user). That's thousands of vendors, but very large lists would need pagination with `LastEvaluatedKey`.
-- **DELETE with a body:** some clients and proxies strip request bodies on `DELETE`. `DELETE /vendors/{vendorId}` would be more conventional.
-- **CORS is wide open** (`*`). Restrict it to your CloudFront domain for production.
-- **Deprecated CloudFront origin:** `origins.S3Origin` is deprecated in newer CDK versions in favor of `origins.S3BucketOrigin.withOriginAccessControl(...)`.
-- **Data protection:** `RemovalPolicy.DESTROY` is convenient for demos but dangerous in production. Consider `RETAIN` plus point-in-time recovery on the table.
-- **Tests:** `backend/test/backend.test.ts` is the CDK template placeholder. Add CDK assertion tests and Lambda unit tests.
-- **CI/CD:** deployment is manual. A GitHub Actions workflow could build the frontend and run `cdk deploy` on every push to `main`.

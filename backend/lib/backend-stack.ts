@@ -20,6 +20,12 @@ export class BackendStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    // Lets each user's vendors be fetched with a Query instead of a full Scan
+    vendorTable.addGlobalSecondaryIndex({
+      indexName: 'ownerId-index',
+      partitionKey: { name: 'ownerId', type: dynamodb.AttributeType.STRING },
+    });
+
     // 2. Lambda Functions
     const lambdaEnv = { TABLE_NAME: vendorTable.tableName };
 
